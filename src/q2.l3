@@ -1,30 +1,81 @@
-(define append 
-  (lambda(lst1 lst2)
-      @TODO
-  )
-)
-
-(define reverse 
+(define empty?
   (lambda (lst)
-        @TODO
-  )
-)
+    (if (eq? lst '())
+      #t
+      #f)))
+
+(define make-list
+  (lambda (dup number)
+    (make-list-aux '() dup number)))
+
+(define make-list-aux
+  (lambda (lst dup number)
+    (if (= 0 dup)
+      lst
+      (make-list-aux (cons number lst) (- dup 1) number))))
+
+(define modulo
+  (lambda (index length)
+    (if (< index length)
+      index
+      (modulo (- index length) length))))
+
+(define length
+  (lambda (lst)
+    (length-aux lst 0)))
+
+(define length-aux
+  (lambda (lst acc)
+    (if (eq? lst '())
+      acc
+      (length-aux (cdr lst) (+ 1 acc)))))
+
+(define append
+  (lambda (lst1 lst2)
+    (if (empty? lst1)
+        lst2
+        (cons (car lst1) (append (cdr lst1) lst2)))))
+
+(define reverse
+  (lambda (lst)
+    (reverse-aux lst '())))
+
+(define reverse-aux
+  (lambda (lst acc)
+    (if (empty? lst)
+        acc
+        (reverse-aux (cdr lst) (cons (car lst) acc)))))
 
 (define duplicate-items
-   (lambda(lst dup-count)
-      @TODO
-   )
-)
+  (lambda (lst dup-count)
+    (duplicate-items-aux lst dup-count 0)))
 
+
+(define duplicate-items-aux
+  (lambda (lst dup-count index)
+    (if (empty? lst)
+        '()
+        (append (make-list (cyclic-nth dup-count (modulo index (length lst))) (car lst)) (duplicate-items-aux (cdr lst) dup-count (+ 1 index))))))
+
+
+(define cyclic-nth
+  (lambda (lst n)
+    (if (= 0 n)
+        (car lst)
+        (cyclic-nth (cdr lst) (- n 1)))))
 
 (define payment
   (lambda (n coins-lst)
-        @TODO
-  )
-)
-                               
+    (if (< n 0)
+        0
+        (if (= n 0)
+            1
+            (if (empty? coins-lst)
+                0
+                (+ (payment (- n (car coins-lst)) coins-lst) (payment n (cdr coins-lst))))))))
+
 (define compose-n
-  (lambda( f n)
-        @TODO
-  )
-)
+  (lambda (f n)
+    (if (= 1 n)
+        f
+        (lambda (x) (f ((compose-n f (- n 1)) x))))))

@@ -40,4 +40,5 @@ dist/**/*
 # ignore yarn.lock
 yarn.lock
 
-Part1.pdf
+assignment2.bak
+assignment2.rkt
