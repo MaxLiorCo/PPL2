@@ -29,8 +29,8 @@ import { Sexp, Token } from "s-expression";
 ;;         |  <boolean>                     / BoolExp(val:boolean)
 ;;         |  <string>                      / StrExp(val:string)
 ;;         |  ( lambda ( <var>* ) <cexp>+ ) / ProcExp(args:VarDecl[], body:CExp[]))
-;;         |  ( if <cexp> <cexp> <cexp> )   / IfExp(test: CExp, then: CExp, alt: CExp)
-;;         |  ( let ( binding* ) <cexp>+ )  / LetExp(bindings:Binding[], body:CExp[]))
+;;         |  ( if <cexp> <cexp>b <cexp> )   / IfExp(test: CExp, then: CExp, alt: CExp)
+;;         |  ( let ( inding* ) <cexp>+ )  / LetExp(bindings:Binding[], body:CExp[]))
 ;;         |  ( quote <sexp> )              / LitExp(val:SExp)
 ;;         |  ( <cexp> <cexp>* )            / AppExp(operator:CExp, operands:CExp[]))
 ;;         | ( class ( <var>+ ) ( <binding>+ ) ) / ClassExp(fields:VarDecl[], methods:Binding[]))  ###L31
@@ -48,8 +48,8 @@ import { Sexp, Token } from "s-expression";
 
 export type Exp = DefineExp | CExp;
 export type AtomicExp = NumExp | BoolExp | StrExp | PrimOp | VarRef;
-export type CompoundExp = AppExp | IfExp | ProcExp | LetExp | LitExp;
-export type CExp =  AtomicExp | CompoundExp | ClassExp;              //ADDED THIS
+export type CompoundExp = AppExp | IfExp | ProcExp | LetExp | LitExp | ClassExp;              //ADDED THIS
+export type CExp =  AtomicExp | CompoundExp;
 
 export interface Program {tag: "Program"; exps: Exp[]; }
 export interface DefineExp {tag: "DefineExp"; var: VarDecl; val: CExp; }
@@ -67,7 +67,8 @@ export interface Binding {tag: "Binding"; var: VarDecl; val: CExp; }
 export interface LetExp {tag: "LetExp"; bindings: Binding[]; body: CExp[]; }
 // L3
 export interface LitExp {tag: "LitExp"; val: SExpValue; }
-export interface ClassExp{tag: "ClassExp"; fields: VarDecl[]; methods: Binding[]; }          //ADDED THIS
+// L31
+export interface ClassExp {tag: "ClassExp"; fields: VarDecl[]; methods: Binding[]; }          //ADDED THIS
 
 // Type value constructors for disjoint types
 export const makeProgram = (exps: Exp[]): Program => ({tag: "Program", exps: exps});
@@ -93,6 +94,7 @@ export const makeLetExp = (bindings: Binding[], body: CExp[]): LetExp =>
 // L3
 export const makeLitExp = (val: SExpValue): LitExp =>
     ({tag: "LitExp", val: val});
+// L31
 export const makeClassExp = (fields: VarDecl[], methods: Binding[]): ClassExp =>          //ADDED THIS    
     ({tag: "ClassExp", fields: fields, methods: methods});
 
@@ -114,6 +116,7 @@ export const isBinding = (x: any): x is Binding => x.tag === "Binding";
 export const isLetExp = (x: any): x is LetExp => x.tag === "LetExp";
 // L3
 export const isLitExp = (x: any): x is LitExp => x.tag === "LitExp";
+// L31
 export const isClassExp = (x: any): x is ClassExp => x.tag === "ClassExp";          //ADDED THIS
 
 // Type predicates for type unions
@@ -122,9 +125,9 @@ export const isAtomicExp = (x: any): x is AtomicExp =>
     isNumExp(x) || isBoolExp(x) || isStrExp(x) ||
     isPrimOp(x) || isVarRef(x);
 export const isCompoundExp = (x: any): x is CompoundExp =>
-    isAppExp(x) || isIfExp(x) || isProcExp(x) || isLitExp(x) || isLetExp(x);
+    isAppExp(x) || isIfExp(x) || isProcExp(x) || isLitExp(x) || isLetExp(x) || isClassExp(x);      //ADDED isClassExp(x)
 export const isCExp = (x: any): x is CExp =>
-    isAtomicExp(x) || isCompoundExp(x) || isClassExp(x);                            //ADDED isClassExp(x)
+    isAtomicExp(x) || isCompoundExp(x);
 
 // ========================================================
 // Parsing
@@ -166,7 +169,8 @@ export const parseL31SpecialForm = (op: Sexp, params: Sexp[]): Result<CExp> =>
     op === "lambda" ? parseProcExp(first(params), rest(params)) :
     op === "let" ? parseLetExp(first(params), rest(params)) :
     op === "quote" ? parseLitExp(first(params)) :
-    op === "class" ? parseClassExp(first(params), rest(params)) : 
+    op === "class" ? parseClassExp(first(params), second(params)) :       // first is the varDecl (a, b)
+                                                                        // rest array of cexp
     makeFailure("Never");
 
 // DefineExp -> (define <varDecl> <CExp>)
@@ -207,7 +211,7 @@ const isPrimitiveOp = (x: string): boolean =>
      "number?", "boolean?", "symbol?", "string?"].includes(x);
 
 const isSpecialForm = (x: string): boolean =>
-    ["if", "lambda", "let", "quote", "class"].includes(x);                  //ADDED THIS
+    ["if", "lambda", "let", "quote", "class"].includes(x);                  //ADDED "class"
 
 const parseAppExp = (op: Sexp, params: Sexp[]): Result<AppExp> =>
     safe2((rator: CExp, rands: CExp[]) => makeOk(makeAppExp(rator, rands)))
@@ -239,15 +243,17 @@ const parseLetExp = (bindings: Sexp, body: Sexp[]): Result<LetExp> => {
         (bindingsResult, mapResult(parseL31CExp, body));
 }
 
-const parseClassExp = (fields: Sexp, methods: Sexp[]): Result<ClassExp> => {
-    if (!isGoodBindings(methods)) {
+const parseClassExp = (vars: Sexp, bindings: Sexp): Result<ClassExp> => {
+    if (!(isArray(vars) && !isEmpty(vars) && allT(isString, vars)))
+        return makeFailure('Malformed variable declaration. It is empty or contains invalid parameters.');
+    if (!isGoodBindings(bindings)) {
         return makeFailure('Malformed bindings in "class" expression');
     }
-    const methodsName = map(b => b[0], methods);
-    const valsResult = mapResult(binding => parseL31CExp(second(methods)), methods);
-    const bindingsResult = bind(valsResult, (vals: CExp[]) => makeOk(zipWith(makeBinding, methodsName, vals)));
-    return safe2((bindings: Binding[], body: CExp[]) => makeOk(makeClassExp(makeVarDecl(fields), methods)))
-        (bindingsResult, mapResult(parseL31CExp, methods));
+    const fields = map(x => makeVarDecl(x), vars);
+    const varsName = map(b => b[0], bindings);
+    const valsResult = mapResult(binding => parseL31CExp(second(binding)), bindings);
+    const bindingsResult = bind(valsResult, (vals: CExp[]) => makeOk(zipWith(makeBinding, varsName, vals)));
+    return bind(bindingsResult, (methods: Binding[]) => makeOk(makeClassExp(fields, methods)));
 }
 
 // sexps has the shape (quote <sexp>)
@@ -302,6 +308,12 @@ const unparseProcExp = (pe: ProcExp): string =>
 const unparseLetExp = (le: LetExp) : string => 
     `(let (${map((b: Binding) => `(${b.var.var} ${unparseL31(b.val)})`, le.bindings).join(" ")}) ${unparseLExps(le.body)})`
 
+const unparseVarDecl = (vd: VarDecl[]): string =>
+    `(${map(x => x.var, vd).join(" ")})`
+
+const unparseBinding = (bd: Binding[]): string =>
+    `(${map((b: Binding) => `(${b.var.var} ${unparseL31(b.val)})`, bd).join(" ")})`
+
 export const unparseL31 = (exp: Program | Exp): string =>
     isBoolExp(exp) ? valueToString(exp.val) :
     isNumExp(exp) ? valueToString(exp.val) :
@@ -315,5 +327,5 @@ export const unparseL31 = (exp: Program | Exp): string =>
     isLetExp(exp) ? unparseLetExp(exp) :
     isDefineExp(exp) ? `(define ${exp.var.var} ${unparseL31(exp.val)})` :
     isProgram(exp) ? `(L31 ${unparseLExps(exp.exps)})` :
-    isClassExp(exp) ? "unprase ClassExpression" :
+    isClassExp(exp) ? `(class ${unparseVarDecl(exp.fields)} ${unparseBinding(exp.methods)})` :
     exp;
