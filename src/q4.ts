@@ -24,7 +24,7 @@ export const unparsePrimOp = (op: CExp, exps: Exp[]): string => {
     //console.log(op);
     if (isPrimOp(op)) {
         if (["+", "-", "/", "*", "<", ">" , "=", "eq?"].includes(op.op)) {
-            return `(${map(unparse, exps).join(` ${op.op === ("=" || "eq?") ? `==` : op.op} `)})`;
+            return map(unparse, exps).join(` ${op.op === ("=" || "eq?") ? `==` : op.op} `);
         }
         return  op.op === "number?" ? `lambda ${map(unparse, exps)} : (type(${map(unparse, exps)}) == number)` :
                 op.op === "boolean?" ? `lambda ${map(unparse, exps)} : (type(${map(unparse, exps)}) == bool)` : 
@@ -65,11 +65,11 @@ export const unparse = (exp: Exp | Program): string =>
     isProcExp(exp) ?  unparseProcExp(exp) :
     isIfExp(exp) ? `(${unparse(exp.then)} if ${unparse(exp.test)} else ${unparse(exp.alt)})` :
     //isAppExp(exp) ?  `(${unparse(exp.rator)} ${unparseLExps(exp.rands)})`:
-    isAppExp(exp) ? `${unparseAppExp(exp)}` :
+    isAppExp(exp) ? `(${unparsePrimOp(exp.rator, exp.rands)})` :
     isPrimOp(exp) ?  `${exp.op}` :
-    isDefineExp(exp) ?  unparseDefineExp(exp) : //`(define ${exp.var.var} ${unparse(exp.val)})`
+    isDefineExp(exp) ?  unparseDefineExp(exp):
     isProgram(exp) ?  unparseLExps(exp.exps):
     "never";
 
 //self testing
-console.log(bind(bind(p(`((lambda (x y) (* x y)) 3 4)`),parseL3Exp),l2ToPython))
+console.log(bind(bind(p(`(define b (> 3 4))`),parseL3Exp),l2ToPython))
