@@ -29,18 +29,21 @@ Signature: l2ToPython(l2AST)
 Type: [EXP | Program] => Result<string>
 */
 export const l2ToPython = (exp: Exp | Program): Result<string>  => 
-    isBoolExp(exp) ? makeOk(`${valueToString(exp.val)}`) :
-    isNumExp(exp) ?  makeOk(`${valueToString(exp.val)}`) :
+    makeOk(unparse(exp));
+
+
+export const unparse = (exp: Exp | Program): string =>
+    isBoolExp(exp) ? `${valueToString(exp.val)}` :
+    isNumExp(exp) ?  `${valueToString(exp.val)}` :
     //isStrExp(exp) ?  makeOk(valueToString(exp.val)) :
-    isVarRef(exp) ? makeOk(`${exp.var}`) :
-    isProcExp(exp) ?  makeOk(unparseProcExp(exp)) :
-    isIfExp(exp) ?  makeOk(`(if ${l2ToPython(exp.test)} ${l2ToPython(exp.then)} ${l2ToPython(exp.alt)})`) :
-    isAppExp(exp) ?  makeOk(`(${l2ToPython(exp.rator)} ${unparseLExps(exp.rands)})`) :
-    isPrimOp(exp) ?  makeOk(`${exp.op}`) :
-    isDefineExp(exp) ?  makeOk(`(define ${exp.var.var} ${l2ToPython(exp.val)})`) :
-    isProgram(exp) ?  makeOk(`(L3 ${unparseLExps(exp.exps)})`) :
-    makeFailure("never");
-    //makeFailure("TODO")
+    isVarRef(exp) ? `${exp.var}` :
+    isProcExp(exp) ?  unparseProcExp(exp) :
+    isIfExp(exp) ? `(${unparse(exp.then)} if ${unparse(exp.test)} else ${unparse(exp.alt)})` :
+    isAppExp(exp) ?  `(${unparse(exp.rator)} ${unparseLExps(exp.rands)})`:
+    isPrimOp(exp) ?  `${exp.op}` :
+    isDefineExp(exp) ?  `(define ${exp.var.var} ${unparse(exp.val)})` :
+    isProgram(exp) ?  `(L3 ${unparseLExps(exp.exps)})` :
+    "never";
 
 //self testing
 console.log(bind(bind(p(`(lambda (x y) (* x y))`),parseL3Exp),l2ToPython))
