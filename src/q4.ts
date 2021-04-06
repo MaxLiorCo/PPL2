@@ -65,7 +65,7 @@ export const unparse = (exp: Exp | Program): string =>
     isProcExp(exp) ?  unparseProcExp(exp) :
     isIfExp(exp) ? `(${unparse(exp.then)} if ${unparse(exp.test)} else ${unparse(exp.alt)})` :
     //isAppExp(exp) ?  `(${unparse(exp.rator)} ${unparseLExps(exp.rands)})`:
-    isAppExp(exp) ? `${unparseAppExp(exp)}` :
+    isAppExp(exp) ? unparseAppExp(exp) :
     isPrimOp(exp) ?  `${exp.op}` :
     isDefineExp(exp) ?  unparseDefineExp(exp):
     isProgram(exp) ?  unparseLExps(exp.exps):
