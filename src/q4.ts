@@ -1,4 +1,4 @@
-import { parseL3Exp, Exp, isAppExp, isBoolExp, isDefineExp, isIfExp, isLetExp, isNumExp, isPrimOp, isProcExp, isProgram, isStrExp, isVarRef, ProcExp, Program, VarDecl } from '../imp/L3-ast';
+import { parseL3Exp, Exp, isAppExp, isBoolExp, isDefineExp, isIfExp, isLetExp, isNumExp, isPrimOp, isProcExp, isProgram, isStrExp, isVarRef, ProcExp, Program, VarDecl, CExp, makeProcExp } from '../imp/L3-ast';
 import { closureToString, compoundSExpToString, isClosure, isCompoundSExp, isEmptySExp, isSymbolSExp, Value } from '../imp/L3-value';
 import { bind, Result, makeFailure, makeOk } from '../shared/result';
 import { isNumber } from '../shared/type-predicates';
@@ -6,7 +6,7 @@ import { map } from "ramda";
 import {parse as p} from '../shared/parser'
 
 const unparseLExps = (les: Exp[]): string =>
-    map(l2ToPython, les).join(" ");
+    map(unparse, les).join(" ");
 
 export const valueToString = (val: Value): string =>
     isNumber(val) ?  val.toString() :
@@ -23,16 +23,22 @@ export const valueToString = (val: Value): string =>
 export const unparsePrimOp = (op: CExp, exps: Exp[]): string => {
     //console.log(op);
     if (isPrimOp(op)) {
-        if (["+", "-", "/", "*"].includes(op.op)) {
-            return map(unparse, exps).join(` ${op.op} `);
+        if (["+", "-", "/", "*", "<", ">" , "=", "eq?"].includes(op.op)) {
+            return map(unparse, exps).join(` ${op.op === "=" || "eq?" ? `==` : op.op} `);
         }
+        return  op.op === "number?" ? `lambda ${map(unparse, exps)} : (type(${map(unparse, exps)}) == number)` :
+                op.op === "boolean?" ? `lambda ${map(unparse, exps)} : (type(${map(unparse, exps)}) == bool)` : 
+                "";
+
     }
+
+
     return "nnn";
 
 }
 
 const unparseProcExp = (pe: ProcExp): string => 
-    `(lambda ${map((p: VarDecl) => p.var, pe.args).join(", ")} : ${unparseLExps(pe.body)})`
+    `(lambda ${map((p: VarDecl) => p.var, pe.args).join(",")} : ${unparseLExps(pe.body)})`
 
 /*
 Purpose: Transform L2 AST to Python program string
@@ -58,4 +64,4 @@ export const unparse = (exp: Exp | Program): string =>
     "never";
 
 //self testing
-console.log(bind(bind(p(`(lambda (x y) (* x y))`),parseL3Exp),l2ToPython))
+console.log(bind(bind(p(`(eq? 5 3)`),parseL3Exp),l2ToPython))
