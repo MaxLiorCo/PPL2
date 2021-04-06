@@ -1,6 +1,5 @@
-import { makeIfExp, makeProcExp, IfExp, ClassExp, ProcExp, Exp, Program, Binding, isClassExp, BoolExp, makeBoolExp, makeAppExp, makeStrExp, makeProgram, makeDefineExp } from "./L31-ast";
+import { isDefineExp,  isExp,  isProgram,  makePrimOp, makeVarDecl, makeVarRef, VarDecl, makeIfExp, makeProcExp, IfExp, ClassExp, ProcExp, Exp, Program, Binding, isClassExp, BoolExp, makeBoolExp, makeAppExp, makeStrExp, makeProgram, makeDefineExp } from "./L31-ast";
 import { Result, makeOk } from "../shared/result";
-import { isDefineExp,  isExp,  isProgram,  makePrimOp, makeVarDecl, makeVarRef, VarDecl } from "../imp/L3-ast";
 import { first, isEmpty } from "../shared/list";
 import { map } from "ramda"
 
@@ -22,9 +21,8 @@ Recursively building the "ifExp".
 const recurIfExp = (bindings: Binding[]): IfExp | BoolExp => {
     return  isEmpty(bindings) ? makeBoolExp(false) :
             makeIfExp(makeAppExp(makePrimOp("eq?"), [makeVarRef("msg"), makeVarRef(`'${bindings[0].var.var}`)]),
-                        makeAppExp(first(bindings).val, []),
-                        recurIfExp(bindings.slice(1)));
-
+                      makeAppExp(first(bindings).val, []),
+                      recurIfExp(bindings.slice(1)));
 }
     
 
@@ -34,9 +32,14 @@ Signature: l31ToL3(l31AST)
 Type: [Exp | Program] => Result<Exp | Program>
 */
 export const L31ToL3 = (exp: Exp | Program): Result<Exp | Program> => 
-    isClassExp(exp) ? makeOk(class2proc(exp)) :
-    isExp(exp) && !isProgram(exp) ? makeOk(exp) :
-    isProgram(exp) ? makeOk(recProgExp(exp)) : makeOk(makeStrExp("never"));
+    isExp(exp) ? isClassExp(exp) ? 
+                    makeOk(class2proc(exp)) :
+                                makeOk(exp) :
+                makeOk(recProgExp(exp));
+            
+    // isClassExp(exp) ? makeOk(class2proc(exp)) :
+    // isExp(exp) && !isProgram(exp) ? makeOk(exp) :
+    // isProgram(exp) ? makeOk(recProgExp(exp)) : makeOk(makeStrExp("never"));
 
     
 /*
