@@ -72,7 +72,7 @@
             1
             (if (empty? coins-lst)
                 0
-                (+ (payment (- n (car coins-lst)) coins-lst) (payment n (cdr coins-lst))))))))
+                (+ (payment (- n (car coins-lst)) (cdr coins-lst)) (payment n (cdr coins-lst))))))))
 
 (define compose-n
   (lambda (f n)
