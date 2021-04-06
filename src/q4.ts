@@ -1,4 +1,4 @@
-import { CExp, parseL3Exp, Exp, isAppExp, isBoolExp, isDefineExp, isIfExp, isLetExp, isNumExp, isPrimOp, isProcExp, isProgram, isStrExp, isVarRef, ProcExp, Program, VarDecl, DefineExp, isAtomicExp } from '../imp/L3-ast';
+import { CExp, parseL3Exp, Exp, isAppExp, isBoolExp, isDefineExp, isIfExp, isLetExp, isNumExp, isPrimOp, isProcExp, isProgram, isStrExp, isVarRef, ProcExp, Program, VarDecl, DefineExp, isAtomicExp, AppExp } from '../imp/L3-ast';
 import { closureToString, compoundSExpToString, isClosure, isCompoundSExp, isEmptySExp, isSymbolSExp, Value } from '../imp/L3-value';
 import { bind, Result, makeFailure, makeOk } from '../shared/result';
 import { isNumber } from '../shared/type-predicates';
@@ -36,6 +36,11 @@ export const unparsePrimOp = (op: CExp, exps: Exp[]): string => {
     return "nnn";
 
 }
+
+export const unparseAppExp = (ae: AppExp): string =>
+    isPrimOp(ae.rator) ? unparsePrimOp(ae.rator, ae.rands) :
+    isProcExp(ae.rator) ? `${unparseProcExp(ae.rator)}(${map(unparse, ae.rands).join(",")})`:
+    "never";
 
 const unparseProcExp = (pe: ProcExp): string => 
     `(lambda ${map((p: VarDecl) => p.var, pe.args).join(",")} : ${unparseLExps(pe.body)})`
