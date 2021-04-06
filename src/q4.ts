@@ -29,7 +29,6 @@ export const unparsePrimOp = (op: CExp, exps: Exp[]): string => {
         return  op.op === "number?" ? `lambda ${map(unparse, exps)} : (type(${map(unparse, exps)}) == number)` :
                 op.op === "boolean?" ? `lambda ${map(unparse, exps)} : (type(${map(unparse, exps)}) == bool)` : 
                 "";
-
     }
 
 
