@@ -1,4 +1,4 @@
-import { Exp, isAppExp, isBoolExp, isDefineExp, isIfExp, isLetExp, isNumExp, isPrimOp, isProcExp, isProgram, isStrExp, isVarRef, ProcExp, Program, VarDecl } from '../imp/L3-ast';
+import { CExp, Exp, isAppExp, isBoolExp, isDefineExp, isIfExp, isLetExp, isNumExp, isPrimOp, isProcExp, isProgram, isStrExp, isVarRef, ProcExp, Program, VarDecl } from '../imp/L3-ast';
 import { closureToString, compoundSExpToString, isClosure, isCompoundSExp, isEmptySExp, isSymbolSExp, Value } from '../imp/L3-value';
 import { Result, makeFailure, makeOk } from '../shared/result';
 import { isNumber } from '../shared/type-predicates';
@@ -19,6 +19,17 @@ export const valueToString = (val: Value): string =>
     isCompoundSExp(val) ? compoundSExpToString(val) :
     "never";
 
+export const unparsePrimOp = (op: CExp, exps: Exp[]): string => {
+    //console.log(op);
+    if (isPrimOp(op)) {
+        if (["+", "-", "/", "*"].includes(op.op)) {
+            return map(unparse, exps).join(` ${op.op} `);
+        }
+    }
+    return "nnn";
+
+}
+
 const unparseProcExp = (pe: ProcExp): string => 
     `(lambda ${map((p: VarDecl) => p.var, pe.args).join(", ")} : ${unparseLExps(pe.body)})`
 
@@ -38,7 +49,8 @@ export const unparse = (exp: Exp | Program): string =>
     isVarRef(exp) ? `${exp.var}` :
     isProcExp(exp) ?  unparseProcExp(exp) :
     isIfExp(exp) ? `(${unparse(exp.then)} if ${unparse(exp.test)} else ${unparse(exp.alt)})` :
-    isAppExp(exp) ?  `(${unparse(exp.rator)} ${unparseLExps(exp.rands)})`:
+    //isAppExp(exp) ?  `(${unparse(exp.rator)} ${unparseLExps(exp.rands)})`:
+    isAppExp(exp) ? `(${unparsePrimOp(exp.rator, exp.rands)})` :
     isPrimOp(exp) ?  `${exp.op}` :
     isDefineExp(exp) ?  `(define ${exp.var.var} ${unparse(exp.val)})` :
     isProgram(exp) ?  `(L3 ${unparseLExps(exp.exps)})` :
