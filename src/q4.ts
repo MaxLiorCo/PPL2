@@ -6,7 +6,7 @@ import { is, map } from "ramda";
 import {parse as p} from '../shared/parser'
 
 const unparseLExps = (les: Exp[]): string =>
-    map(unparse, les).join(" ");
+    map(unparse, les).join("\n");
 
 export const valueToString = (val: Value): string =>
     isNumber(val) ?  val.toString() :
@@ -46,9 +46,7 @@ const unparseProcExp = (pe: ProcExp): string =>
     `(lambda ${map((p: VarDecl) => p.var, pe.args).join(",")} : ${unparseLExps(pe.body)})`
 
 const unparseDefineExp = (de: DefineExp): string =>
-    isProcExp(de.val)? `${de.var.var} = ${unparseProcExp(de.val)}`:
-    isAtomicExp(de.val)? `${de.var.var} = ${unparse(de.val)}`:
-    'not possible'
+    `${de.var.var} = ${unparse(de.val)}`
 
 /*
 Purpose: Transform L2 AST to Python program string
@@ -70,7 +68,7 @@ export const unparse = (exp: Exp | Program): string =>
     isAppExp(exp) ? `${unparseAppExp(exp)}` :
     isPrimOp(exp) ?  `${exp.op}` :
     isDefineExp(exp) ?  unparseDefineExp(exp) : //`(define ${exp.var.var} ${unparse(exp.val)})`
-    isProgram(exp) ?  `(L3 ${unparseLExps(exp.exps)})` :
+    isProgram(exp) ?  unparseLExps(exp.exps):
     "never";
 
 //self testing
