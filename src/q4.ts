@@ -23,24 +23,21 @@ export const valueToString = (val: Value): string =>
 export const unparsePrimOp = (op: CExp, exps: Exp[]): string => {
     //console.log(op);
     if (isPrimOp(op)) {
-        if (["+", "-", "/", "*", "<", ">" , "=", "eq?"].includes(op.op)) {
+        if (["+", "-", "/", "*", "<", ">" , "=", "eq?", "and", "or"].includes(op.op)) {
             return map(unparse, exps).join(` ${op.op === ("=" || "eq?") ? `==` : op.op} `);
         }
         return  op.op === "number?" ? `lambda ${map(unparse, exps)} : (type(${map(unparse, exps)}) == number)` :
                 op.op === "boolean?" ? `lambda ${map(unparse, exps)} : (type(${map(unparse, exps)}) == bool)` : 
-                op.op === "and" ? `` : ""
-
+                op.op === "not" ? `not ${map(unparse, exps).join(" ")}` :
+                "never";
     }
-
-
-    return "nnn";
-
+    return "never";
 }
 
 export const unparseAppExp = (ae: AppExp): string =>
     isPrimOp(ae.rator) ? `(${unparsePrimOp(ae.rator, ae.rands)})` :
     isProcExp(ae.rator) ? `${unparseProcExp(ae.rator)}(${map(unparse, ae.rands).join(",")})`:
-    "never";
+    `${unparse(ae.rator)}(${map(unparse, ae.rands).join(",")})`;        //this is a function like (f 3 4)
 
 const unparseProcExp = (pe: ProcExp): string => 
     `(lambda ${map((p: VarDecl) => p.var, pe.args).join(",")} : ${unparseLExps(pe.body)})`
