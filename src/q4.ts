@@ -1,23 +1,23 @@
 import { Exp, isAppExp, isBoolExp, isDefineExp, isIfExp, isLetExp, isNumExp, isPrimOp, isProcExp, isProgram, isStrExp, isVarRef, ProcExp, Program, VarDecl } from '../imp/L3-ast';
-import { Value } from '../imp/L3-value';
+import { closureToString, compoundSExpToString, isClosure, isCompoundSExp, isEmptySExp, isSymbolSExp, Value } from '../imp/L3-value';
 import { Result, makeFailure, makeOk } from '../shared/result';
-import * as T from '../shared/type-predicates';
+import * as pred from '../shared/type-predicates';
 import { map } from "ramda";
 
 const unparseLExps = (les: Exp[]): string =>
     map(l2ToPython, les).join(" ");
 
-// export const valueToString = (val: Value): string =>
-//     T.isNumber(val) ?  val.toString() :
-//     val === true ? 'true' :
-//     val === false ? 'false' :
-//     T.isString(val) ? `"${val}"` :
-//     T.isClosure(val) ? closureToString(val) :
-//     isPrimOp(val) ? val.op :
-//     isSymbolSExp(val) ? val.val :
-//     isEmptySExp(val) ? " " :
-//     isCompoundSExp(val) ? compoundSExpToString(val) :
-//     val;
+export const valueToString = (val: Value): string =>
+    pred.isNumber(val) ?  val.toString() :
+    val === true ? 'true' :
+    val === false ? 'false' :
+    //T.isString(val) ? `"${val}"` :
+    //isClosure(val) ? closureToString(val) :
+    isPrimOp(val) ? val.op :
+    isSymbolSExp(val) ? val.val :
+    isEmptySExp(val) ? " " :
+    isCompoundSExp(val) ? compoundSExpToString(val) :
+    "never";
 
 const unparseProcExp = (pe: ProcExp): string => 
     `(lambda ${map((p: VarDecl) => p.var, pe.args).join(", ")} : ${unparseLExps(pe.body)})`
