@@ -23,12 +23,12 @@ export const valueToString = (val: Value): string =>
 export const unparsePrimOp = (op: CExp, exps: Exp[]): string => {
     //console.log(op);
     if (isPrimOp(op)) {
-        if (["+", "-", "/", "*", "<", ">" , "=", "eq?"].includes(op.op)) {
+        if (["+", "-", "/", "*", "<", ">" , "=", "eq?", "and", "or"].includes(op.op)) {
             return map(unparse, exps).join(` ${op.op === ("=" || "eq?") ? `==` : op.op} `);
         }
         return  op.op === "number?" ? `lambda ${map(unparse, exps)} : (type(${map(unparse, exps)}) == number)` :
-                op.op === "boolean?" ? `lambda ${map(unparse, exps)} : (type(${map(unparse, exps)}) == bool)` : 
-                op.op === "and" ? `` : ""
+                op.op === "boolean?" ? `lambda ${map(unparse, exps)} : (type(${map(unparse, exps)}) == bool)` :
+                "not very very"
 
     }
 
@@ -43,7 +43,7 @@ export const unparseAppExp = (ae: AppExp): string =>
     "never";
 
 const unparseProcExp = (pe: ProcExp): string => 
-    `lambda ${map((p: VarDecl) => p.var, pe.args).join(",")} : ${unparseLExps(pe.body)}`
+    `(lambda ${map((p: VarDecl) => p.var, pe.args).join(",")} : ${unparseLExps(pe.body)})`
 
 const unparseDefineExp = (de: DefineExp): string =>
     `${de.var.var} = ${unparse(de.val)}`
@@ -62,18 +62,14 @@ export const unparse = (exp: Exp | Program): string =>
     isNumExp(exp) ?  `${valueToString(exp.val)}` :
     //isStrExp(exp) ?  makeOk(valueToString(exp.val)) :
     isVarRef(exp) ? `${exp.var}` :
-    isProcExp(exp) ?  `(${unparseProcExp(exp)})` :
+    isProcExp(exp) ?  unparseProcExp(exp) :
     isIfExp(exp) ? `(${unparse(exp.then)} if ${unparse(exp.test)} else ${unparse(exp.alt)})` :
     //isAppExp(exp) ?  `(${unparse(exp.rator)} ${unparseLExps(exp.rands)})`:
-<<<<<<< HEAD
-    isAppExp(exp) ? `(${unparseAppExp(exp)})` :
-=======
     isAppExp(exp) ? `${unparseAppExp(exp)}` :
->>>>>>> 289d576dc165f28e57f6085cfeefdd3b7336b62e
     isPrimOp(exp) ?  `${exp.op}` :
     isDefineExp(exp) ?  unparseDefineExp(exp):
     isProgram(exp) ?  unparseLExps(exp.exps):
     "never";
 
 //self testing
-console.log(bind(bind(p(`(define b (> 3 4))`),parseL3Exp),l2ToPython))
+console.log(bind(bind(p(`(define b (and 1 2 4))`),parseL3Exp),l2ToPython))
