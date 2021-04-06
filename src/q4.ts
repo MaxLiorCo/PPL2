@@ -40,7 +40,7 @@ export const unparseAppExp = (ae: AppExp): string =>
     `${unparse(ae.rator)}(${map(unparse, ae.rands).join(",")})`;        //this is a function like (f 3 4)
 
 const unparseProcExp = (pe: ProcExp): string => 
-    `(lambda ${map((p: VarDecl) => p.var, pe.args).join(",")} : ${unparseLExps(pe.body)})`
+    `lambda ${map((p: VarDecl) => p.var, pe.args).join(",")} : ${unparseLExps(pe.body)}`
 
 const unparseDefineExp = (de: DefineExp): string =>
     `${de.var.var} = ${unparse(de.val)}`
@@ -59,10 +59,14 @@ export const unparse = (exp: Exp | Program): string =>
     isNumExp(exp) ?  `${valueToString(exp.val)}` :
     //isStrExp(exp) ?  makeOk(valueToString(exp.val)) :
     isVarRef(exp) ? `${exp.var}` :
-    isProcExp(exp) ?  unparseProcExp(exp) :
+    isProcExp(exp) ?  `(${unparseProcExp(exp)})` :
     isIfExp(exp) ? `(${unparse(exp.then)} if ${unparse(exp.test)} else ${unparse(exp.alt)})` :
     //isAppExp(exp) ?  `(${unparse(exp.rator)} ${unparseLExps(exp.rands)})`:
+<<<<<<< HEAD
+    isAppExp(exp) ? `(${unparseAppExp(exp)})` :
+=======
     isAppExp(exp) ? `${unparseAppExp(exp)}` :
+>>>>>>> 289d576dc165f28e57f6085cfeefdd3b7336b62e
     isPrimOp(exp) ?  `${exp.op}` :
     isDefineExp(exp) ?  unparseDefineExp(exp):
     isProgram(exp) ?  unparseLExps(exp.exps):
