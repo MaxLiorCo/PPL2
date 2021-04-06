@@ -1,12 +1,12 @@
-import { parseL3Exp, Exp, isAppExp, isBoolExp, isDefineExp, isIfExp, isLetExp, isNumExp, isPrimOp, isProcExp, isProgram, isStrExp, isVarRef, ProcExp, Program, VarDecl } from '../imp/L3-ast';
+import { CExp, parseL3Exp, Exp, isAppExp, isBoolExp, isDefineExp, isIfExp, isLetExp, isNumExp, isPrimOp, isProcExp, isProgram, isStrExp, isVarRef, ProcExp, Program, VarDecl, DefineExp, isAtomicExp } from '../imp/L3-ast';
 import { closureToString, compoundSExpToString, isClosure, isCompoundSExp, isEmptySExp, isSymbolSExp, Value } from '../imp/L3-value';
 import { bind, Result, makeFailure, makeOk } from '../shared/result';
 import { isNumber } from '../shared/type-predicates';
-import { map } from "ramda";
+import { is, map } from "ramda";
 import {parse as p} from '../shared/parser'
 
 const unparseLExps = (les: Exp[]): string =>
-    map(l2ToPython, les).join(" ");
+    map(unparse, les).join(" ");
 
 export const valueToString = (val: Value): string =>
     isNumber(val) ?  val.toString() :
@@ -34,6 +34,11 @@ export const unparsePrimOp = (op: CExp, exps: Exp[]): string => {
 const unparseProcExp = (pe: ProcExp): string => 
     `(lambda ${map((p: VarDecl) => p.var, pe.args).join(", ")} : ${unparseLExps(pe.body)})`
 
+const unparseDefineExp = (de: DefineExp): string =>
+    isProcExp(de.val)? `${de.var.var} = ${unparseProcExp(de.val)}`:
+    isAtomicExp(de.val)? `${de.var.var} = ${unparse(de.val)}`:
+    'not possible'
+
 /*
 Purpose: Transform L2 AST to Python program string
 Signature: l2ToPython(l2AST)
@@ -53,9 +58,9 @@ export const unparse = (exp: Exp | Program): string =>
     //isAppExp(exp) ?  `(${unparse(exp.rator)} ${unparseLExps(exp.rands)})`:
     isAppExp(exp) ? `(${unparsePrimOp(exp.rator, exp.rands)})` :
     isPrimOp(exp) ?  `${exp.op}` :
-    isDefineExp(exp) ?  `(define ${exp.var.var} ${unparse(exp.val)})` :
+    isDefineExp(exp) ?  unparseDefineExp(exp) : //`(define ${exp.var.var} ${unparse(exp.val)})`
     isProgram(exp) ?  `(L3 ${unparseLExps(exp.exps)})` :
     "never";
 
 //self testing
-console.log(bind(bind(p(`(lambda (x y) (* x y))`),parseL3Exp),l2ToPython))
+console.log(bind(bind(p(`(define x (lambda (a b) (* a b)))`),parseL3Exp),l2ToPython))
