@@ -31,16 +31,15 @@ export const l2ToPython = (exp: Exp | Program): Result<string>  =>
     makeOk(unparse(exp));
 
 
-
 export const unparse = (exp: Exp | Program): string =>
     isBoolExp(exp) ? `${valueToString(exp.val)}` :
     isNumExp(exp) ?  `${valueToString(exp.val)}` :
     //isStrExp(exp) ?  makeOk(valueToString(exp.val)) :
     isVarRef(exp) ? `${exp.var}` :
     isProcExp(exp) ?  unparseProcExp(exp) :
-    isIfExp(exp) ? `(${l2ToPython(exp.then)} if ${l2ToPython(exp.test)} else ${l2ToPython(exp.alt)})` :
-    isAppExp(exp) ?  `(${l2ToPython(exp.rator)} ${unparseLExps(exp.rands)})`:
+    isIfExp(exp) ? `(${unparse(exp.then)} if ${unparse(exp.test)} else ${unparse(exp.alt)})` :
+    isAppExp(exp) ?  `(${unparse(exp.rator)} ${unparseLExps(exp.rands)})`:
     isPrimOp(exp) ?  `${exp.op}` :
-    isDefineExp(exp) ?  `(define ${exp.var.var} ${l2ToPython(exp.val)})` :
+    isDefineExp(exp) ?  `(define ${exp.var.var} ${unparse(exp.val)})` :
     isProgram(exp) ?  `(L3 ${unparseLExps(exp.exps)})` :
     "never";
