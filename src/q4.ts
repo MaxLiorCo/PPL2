@@ -38,7 +38,7 @@ export const unparsePrimOp = (op: CExp, exps: Exp[]): string => {
 }
 
 export const unparseAppExp = (ae: AppExp): string =>
-    isPrimOp(ae.rator) ? unparsePrimOp(ae.rator, ae.rands) :
+    isPrimOp(ae.rator) ? `(${unparsePrimOp(ae.rator, ae.rands)})` :
     isProcExp(ae.rator) ? `${unparseProcExp(ae.rator)}(${map(unparse, ae.rands).join(",")})`:
     "never";
 
@@ -65,7 +65,11 @@ export const unparse = (exp: Exp | Program): string =>
     isProcExp(exp) ?  `(${unparseProcExp(exp)})` :
     isIfExp(exp) ? `(${unparse(exp.then)} if ${unparse(exp.test)} else ${unparse(exp.alt)})` :
     //isAppExp(exp) ?  `(${unparse(exp.rator)} ${unparseLExps(exp.rands)})`:
+<<<<<<< HEAD
     isAppExp(exp) ? `(${unparseAppExp(exp)})` :
+=======
+    isAppExp(exp) ? `${unparseAppExp(exp)}` :
+>>>>>>> 289d576dc165f28e57f6085cfeefdd3b7336b62e
     isPrimOp(exp) ?  `${exp.op}` :
     isDefineExp(exp) ?  unparseDefineExp(exp):
     isProgram(exp) ?  unparseLExps(exp.exps):
