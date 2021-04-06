@@ -1,14 +1,15 @@
-import { Exp, isAppExp, isBoolExp, isDefineExp, isIfExp, isLetExp, isNumExp, isPrimOp, isProcExp, isProgram, isStrExp, isVarRef, ProcExp, Program, VarDecl } from '../imp/L3-ast';
+import { parseL3Exp, Exp, isAppExp, isBoolExp, isDefineExp, isIfExp, isLetExp, isNumExp, isPrimOp, isProcExp, isProgram, isStrExp, isVarRef, ProcExp, Program, VarDecl } from '../imp/L3-ast';
 import { closureToString, compoundSExpToString, isClosure, isCompoundSExp, isEmptySExp, isSymbolSExp, Value } from '../imp/L3-value';
-import { Result, makeFailure, makeOk } from '../shared/result';
-import * as pred from '../shared/type-predicates';
+import { bind, Result, makeFailure, makeOk } from '../shared/result';
+import { isNumber } from '../shared/type-predicates';
 import { map } from "ramda";
+import {parse as p} from '../shared/parser'
 
 const unparseLExps = (les: Exp[]): string =>
     map(l2ToPython, les).join(" ");
 
 export const valueToString = (val: Value): string =>
-    pred.isNumber(val) ?  val.toString() :
+    isNumber(val) ?  val.toString() :
     val === true ? 'true' :
     val === false ? 'false' :
     //T.isString(val) ? `"${val}"` :
@@ -40,3 +41,6 @@ export const l2ToPython = (exp: Exp | Program): Result<string>  =>
     isProgram(exp) ?  makeOk(`(L3 ${unparseLExps(exp.exps)})`) :
     makeFailure("never");
     //makeFailure("TODO")
+
+//self testing
+console.log(bind(bind(p(`(lambda (x y) (* x y))`),parseL3Exp),l2ToPython))
