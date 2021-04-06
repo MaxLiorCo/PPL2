@@ -1,8 +1,9 @@
-import { CExp, Exp, isAppExp, isBoolExp, isDefineExp, isIfExp, isLetExp, isNumExp, isPrimOp, isProcExp, isProgram, isStrExp, isVarRef, ProcExp, Program, VarDecl } from '../imp/L3-ast';
+import { parseL3Exp, Exp, isAppExp, isBoolExp, isDefineExp, isIfExp, isLetExp, isNumExp, isPrimOp, isProcExp, isProgram, isStrExp, isVarRef, ProcExp, Program, VarDecl } from '../imp/L3-ast';
 import { closureToString, compoundSExpToString, isClosure, isCompoundSExp, isEmptySExp, isSymbolSExp, Value } from '../imp/L3-value';
-import { Result, makeFailure, makeOk } from '../shared/result';
+import { bind, Result, makeFailure, makeOk } from '../shared/result';
 import { isNumber } from '../shared/type-predicates';
 import { map } from "ramda";
+import {parse as p} from '../shared/parser'
 
 const unparseLExps = (les: Exp[]): string =>
     map(l2ToPython, les).join(" ");
@@ -55,3 +56,6 @@ export const unparse = (exp: Exp | Program): string =>
     isDefineExp(exp) ?  `(define ${exp.var.var} ${unparse(exp.val)})` :
     isProgram(exp) ?  `(L3 ${unparseLExps(exp.exps)})` :
     "never";
+
+//self testing
+console.log(bind(bind(p(`(lambda (x y) (* x y))`),parseL3Exp),l2ToPython))
