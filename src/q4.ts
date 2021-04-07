@@ -1,8 +1,8 @@
-import { CExp, parseL3Exp, Exp, isAppExp, isBoolExp, isDefineExp, isIfExp, isLetExp, isNumExp, isPrimOp, isProcExp, isProgram, isStrExp, isVarRef, ProcExp, Program, VarDecl, DefineExp, isAtomicExp, AppExp } from '../imp/L3-ast';
-import { closureToString, compoundSExpToString, isClosure, isCompoundSExp, isEmptySExp, isSymbolSExp, Value } from '../imp/L3-value';
-import { bind, Result, makeFailure, makeOk } from '../shared/result';
+import { CExp, parseL3Exp, Exp, isAppExp, isBoolExp, isDefineExp, isIfExp, isNumExp, isPrimOp, isProcExp, isProgram, isVarRef, ProcExp, Program, VarDecl, DefineExp, AppExp } from '../imp/L3-ast';
+import { compoundSExpToString, isCompoundSExp, isEmptySExp, isSymbolSExp, Value } from '../imp/L3-value';
+import { bind, Result, makeOk } from '../shared/result';
 import { isNumber } from '../shared/type-predicates';
-import { is, map } from "ramda";
+import { map } from "ramda";
 import {parse as p} from '../shared/parser'
 
 const unparseLExps = (les: Exp[]): string =>
@@ -12,8 +12,6 @@ export const valueToString = (val: Value): string =>
     isNumber(val) ?  val.toString() :
     val === true ? 'true' :
     val === false ? 'false' :
-    //T.isString(val) ? `"${val}"` :
-    //isClosure(val) ? closureToString(val) :
     isPrimOp(val) ? val.op :
     isSymbolSExp(val) ? val.val :
     isEmptySExp(val) ? " " :
@@ -21,7 +19,6 @@ export const valueToString = (val: Value): string =>
     "never";
 
 export const unparsePrimOp = (op: CExp, exps: Exp[]): string => {
-    //console.log(op);
     if (isPrimOp(op)) {
         if (["+", "-", "/", "*", "<", ">" , "=", "eq?", "and", "or"].includes(op.op)) {
             return map(unparse, exps).join(` ${op.op === ("=" || "eq?") ? `==` : op.op} `);
@@ -57,11 +54,9 @@ export const l2ToPython = (exp: Exp | Program): Result<string>  =>
 export const unparse = (exp: Exp | Program): string =>
     isBoolExp(exp) ? `${valueToString(exp.val)}` :
     isNumExp(exp) ?  `${valueToString(exp.val)}` :
-    //isStrExp(exp) ?  makeOk(valueToString(exp.val)) :
     isVarRef(exp) ? `${exp.var}` :
     isProcExp(exp) ?  unparseProcExp(exp) :
     isIfExp(exp) ? `(${unparse(exp.then)} if ${unparse(exp.test)} else ${unparse(exp.alt)})` :
-    //isAppExp(exp) ?  `(${unparse(exp.rator)} ${unparseLExps(exp.rands)})`:
     isAppExp(exp) ? unparseAppExp(exp) :
     isPrimOp(exp) ?  `${exp.op}` :
     isDefineExp(exp) ?  unparseDefineExp(exp):
