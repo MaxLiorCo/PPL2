@@ -64,4 +64,4 @@ export const unparse = (exp: Exp | Program): string =>
     "never";
 
 //self testing
-console.log(bind(bind(p(`(define b (> 3 4))`),parseL3Exp),l2ToPython))
+console.log(bind(bind(p(`(define b (and 1 2 4))`),parseL3Exp),l2ToPython))
