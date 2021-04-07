@@ -64,7 +64,7 @@
         (car lst)
         (cyclic-nth (cdr lst) (- n 1)))))
 
-(define payment
+(define payment-depricate
   (lambda (n coins-lst)
     (if (< n 0)
         0
@@ -73,6 +73,46 @@
             (if (empty? coins-lst)
                 0
                 (+ (payment (- n (car coins-lst)) (cdr coins-lst)) (payment n (cdr coins-lst))))))))
+                
+(define payment (lambda (sum lst)
+                    (if (empty? lst)
+                       0
+                       (payment-rec sum (rm-dupe lst) (coin-count lst 1)))))
+
+(define coin-count (lambda (lst acc)
+                     (if (empty? (cdr lst))
+                         (cons acc '())
+                         (if (= (car lst) (car (cdr lst)))
+                             (coin-count (cdr lst) (+ acc 1))
+                             (cons acc (coin-count (cdr lst) 1))
+                             ))))
+
+(define rm-dupe (lambda (lst)
+      (if (empty? lst)
+          '()
+          (cons (car lst) (rm-dupe (filterb (lambda (x) (not (eq? x (car lst)))) (cdr lst)))))
+             ))
+(define filterb
+    (lambda (pred lst)
+      (if (empty? lst)
+          '()
+          (if (pred (car lst))
+              (cons (car lst) (filterb pred (cdr lst)))
+              (filterb pred (cdr lst))))))
+            
+(define payment-rec (lambda (sum coins count)
+                  (if (= 0 sum)
+                      1
+                      (if (> 0 sum)
+                          0
+                          (if (empty? coins)
+                              0
+                              (if (> (car count) 0)
+                                  (+ (payment-rec (- sum (car coins)) coins (cons (- (car count) 1) (cdr count)))
+                                     (payment-rec sum (cdr coins) (cdr count)))
+                                  (payment-rec sum (cdr coins) (cdr count)))
+                              )))))
+
 
 (define compose-n
   (lambda (f n)
